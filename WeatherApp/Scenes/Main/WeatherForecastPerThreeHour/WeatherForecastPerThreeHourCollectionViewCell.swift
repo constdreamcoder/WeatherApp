@@ -69,6 +69,10 @@ extension WeatherForecastPerThreeHourCollectionViewCell: UICollectionViewCellCon
             $0.top.bottom.equalToSuperview().inset(16.0)
             $0.horizontalEdges.equalToSuperview()
         }
+        
+        weatherForecastImageView.snp.makeConstraints {
+            $0.size.equalTo(36.0)
+        }
     }
     
     func configureCollectionViewCellUI() {

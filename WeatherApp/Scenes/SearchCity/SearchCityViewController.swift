@@ -23,13 +23,30 @@ final class SearchCityViewController: UIViewController {
     }()
     
     let tableView = UITableView()
+    
+    var cityViewModelList: [CityViewModel] = []
+    var sortedCityViewModelList: [CityViewModel] = []
+    
+    var transferSelectedCityClosure: ((CityViewModel) -> Void)?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        guard let cityList = DataParsingManager.shared.parseData() else { return }
+        cityViewModelList = cityList.map { city in
+            return CityViewModel(
+                id: city.id,
+                name: city.name,
+                country: city.country,
+                coord: city.coord
+            )
+        }
+        sortedCityViewModelList = cityViewModelList
+        
         configureNavigationBar()
         configureConstraints()
         configureUI()
+        configureOthers()
         
         configureTableView()
     }
@@ -85,7 +102,7 @@ extension SearchCityViewController: UIViewControllerConfigurationProtocol {
     }
     
     func configureOthers() {
-        
+        searchBar.delegate = self
     }
     
     func configureUserEvents() {
@@ -103,17 +120,42 @@ extension SearchCityViewController: UITableViewConfigurationProtocol {
 }
 
 extension SearchCityViewController: UITableViewDelegate {
-    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let transferSelectedCityClosure = transferSelectedCityClosure else { return }
+        transferSelectedCityClosure(sortedCityViewModelList[indexPath.row])
+        navigationController?.popViewController(animated: true)
+    }
 }
 
 extension SearchCityViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 20
+        return sortedCityViewModelList.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: SearchResultTableViewCell.identifier, for: indexPath) as? SearchResultTableViewCell else { return UITableViewCell() }
         
+        let city = sortedCityViewModelList[indexPath.row]
+        cell.nameLabel.text = city.name
+        cell.countryLabel.text = city.country
+        
+        if let text = searchBar.text {
+            let keyword = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            cell.doSomething(with: keyword)
+        }
+        
         return cell
+    }
+}
+
+extension SearchCityViewController: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        let keyword = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        
+        sortedCityViewModelList = cityViewModelList.filter { city in
+            return city.name.lowercased().contains(keyword) || city.country.lowercased().contains(keyword)
+        }
+
+        tableView.reloadData()
     }
 }

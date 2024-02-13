@@ -61,6 +61,16 @@ final class MainTableHeaderView: UITableViewCell {
         return label
     }()
     
+    var firstSectionViewModel: FirstSectionViewModel? {
+        willSet {
+            guard let newValue = newValue else { return }
+            cityNameLabel.text = newValue.cityName
+            currentTemperatureLabel.text = newValue.curremtTemp.convertToStringWithTheFirstDecimalPlace + "°"
+            currentWeatherConditionLabel.text = newValue.weatherDes
+            highLowTemperatureOfTodayLabel.text = "최고: \(newValue.highestTemp.convertToStringWithTheFirstDecimalPlace)°  |  최저: \(newValue.lowestTemp.convertToStringWithTheFirstDecimalPlace)°"
+        }
+    }
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         

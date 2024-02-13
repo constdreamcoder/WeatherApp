@@ -29,9 +29,17 @@ final class MainViewController: UIViewController {
         button.setImage(UIImage(systemName: "list.bullet")?.withTintColor(.white, renderingMode: .alwaysOriginal), for: .normal)
         return button
     }()
-
+    
+    var firstSectionViewModel: FirstSectionViewModel?
+    var forecastList: [ForecastViewModel] = []
+    var fifthSectionViewModel: FifthSectionViewModel?
+    
+    var selectedCity: CityViewModel = UserDefaults.standard.recentlySelectedCity
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        getAPIInfos(lat: selectedCity.coord.lat, lon: selectedCity.coord.lon)
         
         configureNavigationBar()
         configureConstraints()
@@ -41,11 +49,51 @@ final class MainViewController: UIViewController {
         
         configureTableView()
     }
+    
+    func getAPIInfos(lat: Double, lon: Double) {
+        OpenWeatherManager.shared.fetchCurrentWeatherConditions(lat: lat, lon: lon) { currentWeatherConditions in
+            self.firstSectionViewModel = FirstSectionViewModel(
+                cityName: currentWeatherConditions.name,
+                curremtTemp: currentWeatherConditions.main.currentTemp,
+                weatherDes: currentWeatherConditions.weather[0].description,
+                lowestTemp: currentWeatherConditions.main.lowestTemp,
+                highestTemp: currentWeatherConditions.main.highestTemp
+            )
+           
+            self.fifthSectionViewModel = FifthSectionViewModel(
+                windSpeed: currentWeatherConditions.wind.speed,
+                windGust: currentWeatherConditions.wind.gust,
+                cloudiness: currentWeatherConditions.clouds.all,
+                humidity: currentWeatherConditions.main.humidity,
+                pressure: currentWeatherConditions.main.pressure
+            )
+            
+            self.tableView.reloadData()
+        }
+        
+        OpenWeatherManager.shared.fetchWeatherForecast(lat: lat, lon: lon) { forecastList in
+            
+            self.forecastList = forecastList.map { forecast in
+                return ForecastViewModel(
+                    currentTime: forecast.convertedDtTxt,
+                    iconName: forecast.weather[0].icon,
+                    temp: Int(forecast.main.currentTemp)
+                )
+            }
+            
+            self.tableView.reloadData()
+        }
+    }
 }
 
 extension MainViewController {
     @objc func searchCityButtonTapped() {
         let searchCityVC = SearchCityViewController()
+        searchCityVC.transferSelectedCityClosure = { selectedCity in
+            dump(selectedCity)
+            UserDefaults.standard.recentlySelectedCity = selectedCity
+            self.getAPIInfos(lat: selectedCity.coord.lat, lon: selectedCity.coord.lon)
+        }
         navigationController?.pushViewController(searchCityVC, animated: true)
     }
 }
@@ -144,10 +192,14 @@ extension MainViewController: UITableViewDataSource {
         if indexPath.section == 0 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: MainTableHeaderView.identifier, for: indexPath) as? MainTableHeaderView else { return UITableViewCell() }
             cell.selectionStyle = .none
+            cell.firstSectionViewModel = firstSectionViewModel
             return cell
         } else if indexPath.section == 1 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SecondSectionTableViewCell.identifier, for: indexPath) as? SecondSectionTableViewCell else { return UITableViewCell() }
             cell.selectionStyle = .none
+            if forecastList.count > 0 {
+                cell.forecastList = Array(forecastList[0..<8])
+            }
             return cell
         } else if indexPath.section == 2 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: ThirdSectionTableViewCell.identifier, for: indexPath) as? ThirdSectionTableViewCell else { return UITableViewCell() }
@@ -157,10 +209,12 @@ extension MainViewController: UITableViewDataSource {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: ForthSectionTableViewCell.identifier, for: indexPath) as? ForthSectionTableViewCell else { return UITableViewCell() }
             cell.selectionStyle = .none
             cell.mainVCInstance = self
+            cell.selectedCity = selectedCity
             return cell
         } else if indexPath.section == 4 {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: FifthSectionTableViewCell.identifier, for: indexPath) as? FifthSectionTableViewCell else { return UITableViewCell() }
             cell.selectionStyle = .none
+            cell.fifthSectionViewModel = fifthSectionViewModel
             return cell
         } else {
             return UITableViewCell()

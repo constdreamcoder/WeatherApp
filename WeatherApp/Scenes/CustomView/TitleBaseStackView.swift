@@ -45,10 +45,6 @@ final class TitleBaseStackView: UIStackView {
         titleIconImageView.snp.makeConstraints {
             $0.size.equalTo(22.0)
         }
-        
-//        titleLabel.snp.makeConstraints {
-//            $0.width.equalTo(40.0)
-//        }
     }
     
     private func configureUI() {

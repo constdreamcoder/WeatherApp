@@ -25,9 +25,15 @@ final class FifthSectionTableViewCell: UITableViewCell {
     
     let separatorView = SeparatorView()
     
+    var fifthSectionViewModel: FifthSectionViewModel? {
+        didSet {
+            collectionView.reloadData()
+        }
+    }
+    
     private let weatherConditionIconList: [String] = ["wind", "drop.fill", "thermometer.medium", "humidity"]
     
-    private let weatherConditionTitleList: [String] = ["바람속도", "구름", "기압", "습도"]
+    private let weatherConditionTitleList: [String] = ["바람 속도", "구름", "기압", "습도"]
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -95,7 +101,22 @@ extension FifthSectionTableViewCell: UICollectionViewDataSource {
             cell.topContainerStackView.titleIconImageView.tintColor = .lightGray
         cell.topContainerStackView.titleLabel.text = weatherConditionTitleList[indexPath.item]
             cell.topContainerStackView.titleLabel.textColor = .lightGray
-
+        
+        guard let fifthSectionViewModel = fifthSectionViewModel else { return UICollectionViewCell() }
+        cell.bottomLabel.isHidden = true
+        if weatherConditionTitleList[indexPath.item] == "바람 속도" {
+            cell.valueLabel.text = "\(fifthSectionViewModel.windSpeed.convertToStringWithTheSecondDecimalPlace)m/s"
+            if fifthSectionViewModel.windGust != 0 {
+                cell.bottomLabel.isHidden = false
+                cell.bottomLabel.text = "강풍: \(fifthSectionViewModel.windGust)m/s"
+            }
+        } else if weatherConditionTitleList[indexPath.item] == "구름" {
+            cell.valueLabel.text = "\(fifthSectionViewModel.cloudiness)%"
+        } else if weatherConditionTitleList[indexPath.item] == "기압" {
+            cell.valueLabel.text = "\(fifthSectionViewModel.pressure)hpa"
+        } else if weatherConditionTitleList[indexPath.item] == "습도" {
+            cell.valueLabel.text = "\(fifthSectionViewModel.humidity)%"
+        }
         return cell
     }
 }

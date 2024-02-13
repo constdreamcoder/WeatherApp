@@ -28,7 +28,6 @@ final class TodayWeatherConditionsCollectionViewCell: UICollectionViewCell {
         return label
     }()
     
-    // TODO: - 이름 다시 정의하기
     let bottomLabel: UILabel = {
         let label = UILabel()
         label.text = "강풍: 4.42m/s"
@@ -69,7 +68,7 @@ extension TodayWeatherConditionsCollectionViewCell: UICollectionViewCellConfigur
         }
         
         topContainerStackView.titleLabel.snp.makeConstraints {
-            $0.width.equalTo(56.0)
+            $0.width.equalTo(60.0)
         }
         
         valueLabel.snp.makeConstraints {

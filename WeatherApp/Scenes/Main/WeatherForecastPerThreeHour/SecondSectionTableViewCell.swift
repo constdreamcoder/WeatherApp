@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Kingfisher
 
 final class SecondSectionTableViewCell: UITableViewCell {
     
@@ -36,6 +37,12 @@ final class SecondSectionTableViewCell: UITableViewCell {
     }()
     
     let separatorView = SeparatorView()
+    
+    var forecastList: [ForecastViewModel] = [] {
+        didSet {
+            collectionView.reloadData()
+        }
+    }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -118,12 +125,18 @@ extension SecondSectionTableViewCell: UICollectionViewDelegate {
 
 extension SecondSectionTableViewCell: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 10
+        return forecastList.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: WeatherForecastPerThreeHourCollectionViewCell.identifier, for: indexPath) as? WeatherForecastPerThreeHourCollectionViewCell else { return UICollectionViewCell() }
-                
+        
+        let forecast = forecastList[indexPath.item]
+        cell.timeLabel.text = "\(forecast.currentTime)시"
+        let url = URL(string: OpenWeatherManager.shared.getImageURL(iconName: forecast.iconName))
+        cell.weatherForecastImageView.kf.setImage(with: url, placeholder: UIImage(systemName: "sun.max"))
+        cell.temperatureLabel.text = "\(forecast.temp)°"
+        
         return cell
     }
 }
